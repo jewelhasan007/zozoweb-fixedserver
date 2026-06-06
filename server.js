@@ -34,4 +34,13 @@ app.get("/debug", (req, res) => {
   });
 });
 
+app.get("/debug-db", async (req, res) => {
+  try {
+    await connectDB();
+    res.json({ db: "connected" });
+  } catch (err) {
+    res.json({ db: "failed", error: err.message });
+  }
+});
+
 export default app; // ✅ This is all Vercel needs
