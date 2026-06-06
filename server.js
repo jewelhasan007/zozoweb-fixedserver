@@ -54,7 +54,8 @@ app.get("/debug-smtp", (req, res) => {
 app.get("/debug-resend", (req, res) => {
   res.json({
     resend_key_set: !!process.env.RESEND_API_KEY,
-    resend_key_prefix: process.env.RESEND_API_KEY?.substring(0, 8) || "NOT SET"
+    resend_key_prefix: process.env.RESEND_API_KEY?.substring(0, 15) || "NOT SET",
+    resend_key_length: process.env.RESEND_API_KEY?.length || 0 // ✅ add this
   });
 });
 export default app; // ✅ This is all Vercel needs
