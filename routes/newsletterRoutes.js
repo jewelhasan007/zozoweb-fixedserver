@@ -2,12 +2,14 @@
 import sendEmail from "../utils/sendEmail.js";
 import express from 'express';
 import Newsletter from '../models/Newsletter.js';
+import connectDB from "../config/db.js";
 
 const router = express.Router();
 
 router.post('/', async (req, res) => {
       console.log("API HIT");
   try {
+    await connectDB()
     const { email } = req.body;
 
     // Basic validation
