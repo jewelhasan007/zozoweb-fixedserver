@@ -43,4 +43,12 @@ app.get("/debug-db", async (req, res) => {
   }
 });
 
+app.get("/debug-smtp", (req, res) => {
+  res.json({
+    smtp_user_set: !!process.env.SMTP_USER,
+    smtp_user: process.env.SMTP_USER || "NOT SET",
+    smtp_pass_set: !!process.env.SMTP_PASS,
+  });
+});
+
 export default app; // ✅ This is all Vercel needs

@@ -5,6 +5,9 @@ const sendEmail = async ({ to, subject, text, html }) => {
     host: "smtp.gmail.com",
     port: 587,
     secure: false,
+      connectionTimeout: 10000,  // ✅ 10 seconds
+  greetingTimeout: 10000,    // ✅ 10 seconds
+  socketTimeout: 10000,      // ✅ 10 seconds
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
