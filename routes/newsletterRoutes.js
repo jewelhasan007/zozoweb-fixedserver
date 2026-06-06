@@ -42,11 +42,13 @@ router.get("/",protect, async (req, res) => {
   }
 });
 
+import EmailLog from "../models/EmailLog.js"; // ✅ add this
+
 router.post("/send", protect, async (req, res) => {
   try {
-    await connectDB(); // ✅ add this
+    await connectDB();
     console.log("📩 Send email API HIT");
-  
+
     const { subject, message } = req.body;
 
     if (!subject || !message) {
@@ -68,6 +70,7 @@ router.post("/send", protect, async (req, res) => {
     const emails = subscribers.map((sub) => sub.email);
     console.log("📧 Total subscribers:", emails.length);
 
+    // ✅ Send emails in batches
     const batchSize = 50;
     for (let i = 0; i < emails.length; i += batchSize) {
       const batch = emails.slice(i, i + batchSize);
@@ -80,20 +83,47 @@ router.post("/send", protect, async (req, res) => {
       });
     }
 
+    // ✅ Save email log to DB
+    await EmailLog.create({
+      subject,
+      message,
+      sentTo: emails.length,
+      status: "success",
+    });
+
     console.log("✅ All emails sent successfully");
     res.status(200).json({
       success: true,
       message: "Emails sent to all subscribers successfully",
     });
 
-
   } catch (error) {
     console.error("❌ EMAIL SEND ERROR:", error);
+
+    // ✅ Save failed log too
+    await EmailLog.create({
+      subject: req.body.subject || "Unknown",
+      message: req.body.message || "Unknown",
+      sentTo: 0,
+      status: "failed",
+      error: error.message,
+    });
+
     res.status(500).json({
       success: false,
-      error: error.message, // ✅ return real error
-      stack: error.stack    // ✅ return stack trace
+      error: error.message,
     });
+  }
+});
+
+// ✅ Get all email logs (admin only)
+router.get("/logs", protect, async (req, res) => {
+  try {
+    await connectDB();
+    const logs = await EmailLog.find().sort({ sentAt: -1 });
+    res.status(200).json(logs);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
