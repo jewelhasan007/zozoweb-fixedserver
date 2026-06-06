@@ -6,6 +6,7 @@ import cors from "cors";
 import connectDB from "./config/db.js";
 import contactRoutes from "./routes/contactRoutes.js";
 import newsletterRoutes from "./routes/newsletterRoutes.js";
+import authRoutes from "./routes/authRoutes.js"; 
 
 const app = express();
 
@@ -16,6 +17,7 @@ connectDB();
 
 app.use("/api", contactRoutes);
 app.use("/api/newsletter", newsletterRoutes);
+app.use("/api/auth", authRoutes);
 
 app.get("/", (req, res) => {
   res.json({ status: "ok" });

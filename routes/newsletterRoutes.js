@@ -2,10 +2,11 @@ import sendEmail from "../utils/sendEmail.js";
 import express from 'express';
 import Newsletter from '../models/Newsletter.js';
 import connectDB from '../config/db.js'; // ✅ add this
+import protect from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-router.post('/', async (req, res) => {
+router.post('/',  async (req, res) => {
   console.log("API HIT");
   try {
     await connectDB(); // ✅ add this
@@ -26,7 +27,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.get("/", async (req, res) => {
+router.get("/",protect, async (req, res) => {
   try {
     await connectDB(); // ✅ add this
     const subscribers = await Newsletter.find().sort({ subscribedAt: -1 }).select("email subscribedAt");
@@ -41,7 +42,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.post("/send", async (req, res) => {
+router.post("/send", protect, async (req, res) => {
   try {
     await connectDB(); // ✅ add this
     console.log("📩 Send email API HIT");
