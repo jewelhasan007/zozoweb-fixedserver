@@ -12,24 +12,19 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Connect DB on each cold start (cached via global)
 connectDB();
 
 app.use("/api", contactRoutes);
 app.use("/api/newsletter", newsletterRoutes);
 
-
-// Health check
 app.get("/", (req, res) => {
   res.json({ status: "ok" });
 });
 
-const PORT = process.env.PORT || 5000;
+// ❌ DELETE these 4 lines — app.listen() crashes Vercel:
+// const PORT = process.env.PORT || 5000;
+// app.listen(PORT, () => {
+//   console.log(`Server running on port ${PORT}`);
+// });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
-
-// ✅ VERCEL FIX: Export the app instead of calling app.listen()
-// app.listen() does NOT work on Vercel serverless functions
-export default app;
+export default app; // ✅ This is all Vercel needs
