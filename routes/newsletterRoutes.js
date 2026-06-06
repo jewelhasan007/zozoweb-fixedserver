@@ -32,8 +32,12 @@ router.get("/", async (req, res) => {
     const subscribers = await Newsletter.find().sort({ subscribedAt: -1 }).select("email subscribedAt");
     res.status(200).json(subscribers);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: error.message }); // ✅ show real error
+    console.error("❌ EMAIL SEND ERROR:", error);
+    res.status(500).json({
+      success: false,
+      error: error.message, // ✅ return real error
+      stack: error.stack    // ✅ return stack trace
+    });
   }
 });
 
@@ -43,8 +47,12 @@ router.post("/send", async (req, res) => {
     console.log("📩 Send email API HIT");
     // ... rest of your code unchanged
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: error.message }); // ✅ show real error
+    console.error("❌ EMAIL SEND ERROR:", error);
+    res.status(500).json({
+      success: false,
+      error: error.message, // ✅ return real error
+      stack: error.stack    // ✅ return stack trace
+    });
   }
 });
 
