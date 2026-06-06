@@ -27,4 +27,11 @@ app.get("/", (req, res) => {
 //   console.log(`Server running on port ${PORT}`);
 // });
 
+app.get("/debug", (req, res) => {
+  res.json({
+    mongo_uri_set: !!process.env.MONGO_URI,
+    mongo_uri_prefix: process.env.MONGO_URI?.substring(0, 20) || "NOT SET"
+  });
+});
+
 export default app; // ✅ This is all Vercel needs
