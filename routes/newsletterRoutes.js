@@ -49,7 +49,7 @@ router.post("/send", protect, async (req, res) => {
     await connectDB();
     console.log("📩 Send email API HIT");
 
-    const { subject, message, html } = req.body;
+    const { subject, message, html, imageBase64 } = req.body; // ✅ destructure imageBase64
 
     if (!subject || !message) {
       return res.status(400).json({
@@ -90,12 +90,13 @@ router.post("/send", protect, async (req, res) => {
 
     await Promise.all(emailPromises);
 
-    // ✅ Save log after sending
+    // ✅ Save log after sending — now includes imageUrl
     await EmailLog.create({
       subject,
       message,
       sentTo: emails.length,
-      hasImage: !!html && html.includes("<img"),
+      hasImage: !!imageBase64,
+      imageUrl: imageBase64 || null, // ✅ store base64 for history thumbnail
       status: "success",
     });
 
@@ -104,13 +105,13 @@ router.post("/send", protect, async (req, res) => {
   } catch (error) {
     console.error("❌ EMAIL SEND ERROR:", error);
 
-    // Only save failed log if error happens before res.json()
     if (!res.headersSent) {
       await EmailLog.create({
         subject: req.body.subject || "Unknown",
         message: req.body.message || "Unknown",
         sentTo: 0,
-        hasImage: !!req.body.html && req.body.html.includes("<img"),
+        hasImage: false,
+        imageUrl: null,
         status: "failed",
         error: error.message,
       });
