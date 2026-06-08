@@ -70,7 +70,13 @@ router.post("/send", protect, async (req, res) => {
     const emails = subscribers.map((sub) => sub.email);
     console.log("📧 Total subscribers:", emails.length);
 
-    // ✅ Send all emails in parallel - much faster than sequential
+    // ✅ Respond immediately — don't wait for emails to finish
+    res.status(200).json({
+      success: true,
+      message: `Sending emails to ${emails.length} subscribers...`,
+    });
+
+    // ✅ Send emails AFTER responding (background)
     const emailPromises = emails.map((email) =>
       sendEmail({
         to: email,
@@ -79,12 +85,12 @@ router.post("/send", protect, async (req, res) => {
         html: html || `<p>${message}</p>`,
       })
         .then(() => console.log(`✅ Sent to: ${email}`))
-        .catch((err) => console.error(`❌ Failed to send to ${email}:`, err.message))
+        .catch((err) => console.error(`❌ Failed: ${email}:`, err.message))
     );
 
     await Promise.all(emailPromises);
 
-    // ✅ Save success log with hasImage
+    // ✅ Save log after sending
     await EmailLog.create({
       subject,
       message,
@@ -94,27 +100,26 @@ router.post("/send", protect, async (req, res) => {
     });
 
     console.log("✅ All emails sent successfully");
-    res.status(200).json({
-      success: true,
-      message: "Emails sent to all subscribers successfully",
-    });
 
   } catch (error) {
     console.error("❌ EMAIL SEND ERROR:", error);
 
-    await EmailLog.create({
-      subject: req.body.subject || "Unknown",
-      message: req.body.message || "Unknown",
-      sentTo: 0,
-      hasImage: !!req.body.html && req.body.html.includes("<img"),
-      status: "failed",
-      error: error.message,
-    });
+    // Only save failed log if error happens before res.json()
+    if (!res.headersSent) {
+      await EmailLog.create({
+        subject: req.body.subject || "Unknown",
+        message: req.body.message || "Unknown",
+        sentTo: 0,
+        hasImage: !!req.body.html && req.body.html.includes("<img"),
+        status: "failed",
+        error: error.message,
+      });
 
-    res.status(500).json({
-      success: false,
-      error: error.message,
-    });
+      res.status(500).json({
+        success: false,
+        error: error.message,
+      });
+    }
   }
 });
 
