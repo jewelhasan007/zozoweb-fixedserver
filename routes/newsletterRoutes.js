@@ -3,7 +3,7 @@ import express from 'express';
 import Newsletter from '../models/Newsletter.js';
 import connectDB from '../config/db.js';
 import protect from "../middleware/authMiddleware.js";
-import EmailLog from "../models/EmailLog.js"; // ✅ moved to top
+import EmailLog from "../models/EmailLog.js";
 
 const router = express.Router();
 
@@ -43,13 +43,13 @@ router.get("/", protect, async (req, res) => {
   }
 });
 
-// ✅ PROTECTED - Send email to all subscribers
+// ✅ PROTECTED - Send email to all subscribers individually
 router.post("/send", protect, async (req, res) => {
   try {
     await connectDB();
     console.log("📩 Send email API HIT");
 
-    const { subject, message, html } = req.body; // ✅ destructure html
+    const { subject, message, html } = req.body;
 
     if (!subject || !message) {
       return res.status(400).json({
@@ -70,17 +70,15 @@ router.post("/send", protect, async (req, res) => {
     const emails = subscribers.map((sub) => sub.email);
     console.log("📧 Total subscribers:", emails.length);
 
-    // Send in batches of 50
-    const batchSize = 50;
-    for (let i = 0; i < emails.length; i += batchSize) {
-      const batch = emails.slice(i, i + batchSize);
-      console.log(`🚀 Sending batch ${i / batchSize + 1}`);
+    // ✅ Send individually - each subscriber only sees their own email
+    for (const email of emails) {
       await sendEmail({
-        to: batch,
+        to: email,           // ✅ single recipient only
         subject,
         text: message,
-        html: html || `<p>${message}</p>`, // ✅ use custom HTML with image if provided
+        html: html || `<p>${message}</p>`,
       });
+      console.log(`✅ Sent to: ${email}`);
     }
 
     // ✅ Save success log
