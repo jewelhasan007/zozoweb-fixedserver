@@ -9,9 +9,7 @@ if (!MONGO_URI) {
   throw new Error("MONGO_URI is missing from environment variables");
 }
 
-// Cache the connection across serverless cold starts
 let cached = global.mongoose;
-
 if (!cached) {
   cached = global.mongoose = { conn: null, promise: null };
 }
@@ -20,14 +18,20 @@ const connectDB = async () => {
   if (cached.conn) return cached.conn;
 
   if (!cached.promise) {
-    cached.promise = mongoose
-      .connect(MONGO_URI, {
-        serverSelectionTimeoutMS: 5000,
-      })
-      .then((m) => m);
+    cached.promise = mongoose.connect(MONGO_URI, {
+      serverSelectionTimeoutMS: 3000, // ✅ fail fast in 3s instead of 30s
+      connectTimeoutMS: 3000,         // ✅ connection timeout
+      socketTimeoutMS: 3000,          // ✅ socket timeout
+    });
   }
 
-  cached.conn = await cached.promise;
+  try {
+    cached.conn = await cached.promise;
+  } catch (err) {
+    cached.promise = null; // ✅ reset so next request retries
+    throw err;
+  }
+
   return cached.conn;
 };
 
